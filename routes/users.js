@@ -6,9 +6,14 @@ const passport = require('passport');
 //User Model
 const User = require('../models/User');
 
+//@route   GET /login
 router.get('/login', (req, res) => res.render('login'));
+
+//@route   GET /register
 router.get('/register', (req, res) => res.render('register'));
 
+//@route   POST /register
+//@desc    Validate form > check if user already exists > hash password > store user
 router.post('/register', (req, res) => {
   const { name, email, password, password2 } = req.body;
   let errors = [];
@@ -19,6 +24,7 @@ router.post('/register', (req, res) => {
       msg: 'Please fill in all fields',
     });
   }
+
   //check that passwords match
   if (password !== password2) {
     errors.push({
@@ -40,13 +46,16 @@ router.post('/register', (req, res) => {
       password,
       password2,
     });
-  } else {
-    //Validation passed
+  } 
+
+  //validation passed
+  else {
     User.findOne({
       email: email,
     }).then((user) => {
+
+      //Check if user exists
       if (user) {
-        //User existes
         errors.push({
           msg: 'User already registered',
         });
@@ -70,6 +79,8 @@ router.post('/register', (req, res) => {
           bcrypt.hash(newUser.password, salt, (err, hash) => {
             if (err) console.log(err);
             newUser.password = hash;
+            
+            //Save User
             newUser
               .save()
               .then((user) => {
@@ -87,6 +98,7 @@ router.post('/register', (req, res) => {
   }
 });
 
+//@route   POST /login
 router.post('/login', (req, res, next) => {
   passport.authenticate('local', {
     successRedirect: '/dashboard',
@@ -95,6 +107,7 @@ router.post('/login', (req, res, next) => {
   })(req, res, next);
 });
 
+//@route   GET /logout
 router.get('/logout', (req, res) => {
   req.logout();
   req.flash('success_msg', 'You have been logged out');
